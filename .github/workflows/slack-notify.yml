@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       payload:
-        description: "Slack通知の内容（title, mentions, content を含むJSON）"
+        description: "Slack通知の内容（title, mentions: [GitHub ID...], content）"
         required: true
         type: string
 
@@ -12,23 +12,41 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
-      - name: Parse and format Slack payload
-        id: format
+      - name: Checkout (to get user_mapping.csv)
+        uses: actions/checkout@v4
+
+      - name: Parse Slack Payload
+        id: parse
         run: |
           echo '${{ inputs.payload }}' > payload.json
+          echo "TITLE=$(jq -r .title payload.json)" >> $GITHUB_OUTPUT
+          echo "CONTENT=$(jq -r .content payload.json)" >> $GITHUB_OUTPUT
 
-          TITLE=$(jq -r .title payload.json)
-          MENTIONS=$(jq -r .mentions payload.json)
-          CONTENT=$(jq -r .content payload.json)
+      - name: Map GitHub IDs to Slack IDs
+        id: map
+        run: |
+          GITHUB_IDS=$(jq -r '.mentions[]' payload.json)
+          SLACK_MENTIONS=""
 
+          while IFS= read -r GITHUB_ID; do
+            SLACK_ID=$(awk -F',' -v id="$GITHUB_ID" '$1 == id {print $2}' ./data/user_mapping.csv)
+            if [ -n "$SLACK_ID" ]; then
+              SLACK_MENTIONS+="<@$SLACK_ID> "
+            fi
+          done <<< "$GITHUB_IDS"
+
+          echo "MENTIONS=$SLACK_MENTIONS" >> $GITHUB_OUTPUT
+
+      - name: Format Slack Payload
+        id: format
+        run: |
           read -r -d '' BODY <<-EOF
-            *${TITLE}*
-            ${MENTIONS}
+            *${{ steps.parse.outputs.TITLE }}*
+            ${{ steps.map.outputs.MENTIONS }}
 
-            ${CONTENT}
+            ${{ steps.parse.outputs.CONTENT }}
           EOF
 
-          # 改行エスケープ（Slack送信用JSONとして整形）
           ESCAPED_BODY="${BODY//$'\n'/\\n}"
           echo "payload={\"text\":\"${ESCAPED_BODY}\"}" >> $GITHUB_OUTPUT
 
