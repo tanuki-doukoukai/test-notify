@@ -40,12 +40,13 @@ jobs:
       - name: Format Slack Payload
         id: format
         run: |
-          read -r BODY <<EOF
-            *${{ steps.parse.outputs.TITLE }}*
-            ${{ steps.map.outputs.MENTIONS }}
+          BODY=$(cat <<EOF
+          *${{ steps.parse.outputs.TITLE }}*
+          ${{ steps.map.outputs.MENTIONS }}
 
-            ${{ steps.parse.outputs.CONTENT }}
+          ${{ steps.parse.outputs.CONTENT }}
           EOF
+          )
 
           ESCAPED_BODY="${BODY//$'\n'/\\n}"
           echo "payload={\"text\":\"${ESCAPED_BODY}\"}" >> $GITHUB_OUTPUT
