@@ -40,7 +40,7 @@ jobs:
       - name: Format Slack Payload
         id: format
         run: |
-          read -r -d '' BODY <<-EOF
+          read -r BODY <<EOF
             *${{ steps.parse.outputs.TITLE }}*
             ${{ steps.map.outputs.MENTIONS }}
 
