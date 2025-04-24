@@ -1,0 +1,11 @@
+name: Check Workflow Dispatch
+
+on:
+  workflow_dispatch:
+
+jobs:
+  echo-dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Echo workflow_dispatch trigger
+        run: echo "✅ workflow_dispatch が正常に発火しました！"
