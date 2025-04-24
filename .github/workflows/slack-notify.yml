@@ -1,0 +1,40 @@
+name: Slack Notify
+
+on:
+  workflow_dispatch:
+    inputs:
+      payload:
+        description: "Slack通知の内容（title, mentions, content を含むJSON）"
+        required: true
+        type: string
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Parse and format Slack payload
+        id: format
+        run: |
+          echo '${{ inputs.payload }}' > payload.json
+
+          TITLE=$(jq -r .title payload.json)
+          MENTIONS=$(jq -r .mentions payload.json)
+          CONTENT=$(jq -r .content payload.json)
+
+          read -r -d '' BODY <<-EOF
+            *${TITLE}*
+            ${MENTIONS}
+
+            ${CONTENT}
+          EOF
+
+          # 改行エスケープ（Slack送信用JSONとして整形）
+          ESCAPED_BODY="${BODY//$'\n'/\\n}"
+          echo "payload={\"text\":\"${ESCAPED_BODY}\"}" >> $GITHUB_OUTPUT
+
+      - name: Send to Slack
+        uses: slackapi/slack-github-action@v1.25.0
+        with:
+          payload: ${{ steps.format.outputs.payload }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_TANUKI_BOX_WEBHOOK_URL }}
