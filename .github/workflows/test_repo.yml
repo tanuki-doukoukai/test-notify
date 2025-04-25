@@ -11,6 +11,9 @@ jobs:
       - name: Send to Slack
         uses: slackapi/slack-github-action@v1.25.0
         with:
-          payload: ${{ github.event.client_payload.content }}
+          payload: |
+            {
+              "text": "${{ github.event.client_payload.content }}"
+            }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_TANUKI_BOX_WEBHOOK_URL }}
