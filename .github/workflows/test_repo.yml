@@ -1,12 +1,8 @@
 name: Check Workflow Dispatch
 
 on:
-  workflow_dispatch:
-    inputs:
-      payload:
-        required: false
-        default: "通知でやんすよ"
-        type: string
+  repository_dispatch:
+    types: [test-repository-dispatch]
 
 jobs:
   echo-dispatch:
@@ -15,6 +11,6 @@ jobs:
       - name: Send to Slack
         uses: slackapi/slack-github-action@v1.25.0
         with:
-          payload: ${{ steps.format.outputs.payload }}
+          payload: ${{ github.event.client_payload.content }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_TANUKI_BOX_WEBHOOK_URL }}
