@@ -29,7 +29,19 @@ jobs:
               ;;
           esac
 
-          TEXT="${EMOJI} ${MESSAGE}\n🔗 <${PR_URL}|#${PR_NUMBER}> by @${AUTHOR}"
-          echo "payload_text<<EOF" >> $GITHUB_OUTPUT
-          echo "$TEXT" >> $GITHUB_OUTPUT
-          echo "EOF" >>
+          BODY=$(cat <<EOF
+          ${EMOJI} ${MESSAGE}
+          
+          🔗 <${PR_URL}|#${PR_NUMBER}> by @${AUTHOR}
+          EOF
+          )
+
+          ESCAPED_BODY="${BODY//$'\n'/\\n}"
+          echo "payload={\"text\":\"${ESCAPED_BODY}\"}" >> $GITHUB_OUTPUT
+
+      - name: Send to Slack
+        uses: slackapi/slack-github-action@v1.25.0
+        with:
+          payload: ${{ steps.format.outputs.payload }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_TANUKI_BOX_WEBHOOK_URL }}
