@@ -15,7 +15,7 @@ jobs:
           AUTHOR="${{ github.event.client_payload.author }}"
           PR_NUMBER="${{ github.event.client_payload.pull_request.number }}"
           PR_TITLE="${{ github.event.client_payload.pull_request.title }}"
-          PR_URL="${{ github.event.client_payload.pull_request.url }}"
+          PR_URL="${{ github.event.client_payload.pull_request.html_url }}"
 
           # 通知メッセージを作成（必要ならswitch的に出し分けてもOK）
           case "$NOTIFY_TYPE" in
