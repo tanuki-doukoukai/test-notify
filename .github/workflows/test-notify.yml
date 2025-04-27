@@ -11,21 +11,29 @@ jobs:
       - name: Format Slack message
         id: format
         run: |
-          NOTIFY_TYPE="${{ github.event.client_payload.notify_type }}"
+          REQUIRED_ACTION_TYPE="${{ github.event.client_payload.required_action_type}" }}"
           AUTHOR="${{ github.event.client_payload.author }}"
           PR_NUMBER="${{ github.event.client_payload.pull_request.number }}"
           PR_TITLE="${{ github.event.client_payload.pull_request.title }}"
           PR_URL="${{ github.event.client_payload.pull_request.html_url }}"
 
           # 通知メッセージを作成（必要ならswitch的に出し分けてもOK）
-          case "$NOTIFY_TYPE" in
-            auto-create-pr-merge-action-required)
+          case "$REQUIRED_ACTION_TYPE" in
+            auto-create-pr-merge)
               EMOJI="☑️"
               MESSAGE="*${PR_TITLE}* のPRが作成されました（マージ対応が必要です）"
               ;;
+            auto-create-pr-conflict)
+              EMOJI="⚡"
+              MESSAGE="*${PR_TITLE}* にマージコンフリクトが発生しています（対応が必要です）"
+              ;;
+            auto-create-pr-fail-ci)
+              EMOJI="❌"
+              MESSAGE="*${PR_TITLE}* のCIチェックに失敗しました（修正が必要です）"
+              ;;
             *)
               EMOJI="ℹ️"
-              MESSAGE="通知タイプ: ${NOTIFY_TYPE} のPR通知です"
+              MESSAGE="通知タイプ: ${REQUIRED_ACTION_TYPE} のPR通知です"
               ;;
           esac
 
